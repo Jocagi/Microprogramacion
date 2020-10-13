@@ -1,2 +1,0 @@
-C:\Users\user\source\repos\TestASM\Debug\TestASM.exe
-C:\Users\user\source\repos\TestASM\Debug\TestASM.pdb
