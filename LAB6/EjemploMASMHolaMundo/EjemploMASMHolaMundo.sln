@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1209
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EjemploMASMHolaMundo", "EjemploMASMHolaMundo\EjemploMASMHolaMundo.vcxproj", "{DDAE7E97-422C-4A7B-BB3C-607497C5045D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Debug|x64.ActiveCfg = Debug|x64
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Debug|x64.Build.0 = Debug|x64
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Debug|x86.ActiveCfg = Debug|Win32
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Debug|x86.Build.0 = Debug|Win32
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Release|x64.ActiveCfg = Release|x64
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Release|x64.Build.0 = Release|x64
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Release|x86.ActiveCfg = Release|Win32
+		{DDAE7E97-422C-4A7B-BB3C-607497C5045D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B32E9520-EC69-4FCE-B7C1-B9274CC171CA}
+	EndGlobalSection
+EndGlobal
