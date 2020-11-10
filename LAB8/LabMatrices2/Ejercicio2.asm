@@ -24,22 +24,23 @@ INCLUDELIB \masm32\lib\masm32.lib
 	sValorFila DB 10,13,"Ingrese cantidad de filas: ",0
 	sValorColumna DB 10,13,"Ingrese cantidad de columnas: ",0
 	sTamanioMatriz DB 10,13,"La matriz tiene un tamaño de: ",0
-	sValorMatriz DB 10,13,"Los valores en la matriz son: ",10,13,0
+	sValorMatriz DB 10,13,10,13,"Los valores en la matriz son: ",10,13,0
+	sInstruccionFila DB 10,13,10,13,"Ingrese los valores para cada fila. Cada caracter toma una posicion en la matriz.", 10,13, "Se ignora los valores extras.",10,13,0
+	sInputFila DB 10,13,"Ingrese valores de la fila: ",0
 	sError DB 10,13,"Error. Tamaño de matriz demasiado grande.",10,13,0
 	sErrorValor DB 10,13,"Error. Entrada Invalida.",10,13,0
 	sSalto DB 10,13,0
 	sEspacio DB " ",0
 	;Data
 	matriz DB 9802 DUP(0)
-	sInput DB 10 DUP(0)
+	sInput DB 105 DUP(0)
 	sResultado DB 10 DUP(0)
 	filas DW 0
 	columnas DW 0
 	buffer DB 0
 	intValue DW 0
-	actualValue DB 255
 	posicion DB 0
-	value DB 0
+	value DB 0,0
 	i DW 0
 	j DW 0
 .CODE
@@ -59,10 +60,10 @@ ImprimirMatriz PROC NEAR ;Imprime los valores de la matriz
 	INVOKE StdOut, ADDR sValorMatriz
 	LEA EDI, matriz
 	InicioImprimir:
-	INVOKE StdOut, ADDR sSalto
-	CALL Limpiar
-	MOV i, AX
-	MOV j, AX
+		INVOKE StdOut, ADDR sSalto
+		CALL Limpiar
+		MOV i, AX
+		MOV j, AX
 		;Evaluar cada una de las filas
 		InicioImprimirFila:
 			;Comprobar si se ha llegado al final de la matriz
@@ -77,11 +78,11 @@ ImprimirMatriz PROC NEAR ;Imprime los valores de la matriz
 				MOV BX, columnas
 				CMP j, BX
 				JE FinImprimirColumnas
-				;Imprimir valor				
+				;Imprimir valor
+				LEA ESI, value
 				MOV AL, [EDI]
-				MOV intValue, AX
-				CALL IntToString
-				INVOKE StdOut, ADDR sResultado
+				MOV [ESI], AL 
+				INVOKE StdOut, ADDR value
 				INVOKE StdOut, ADDR sEspacio
 				;Moverse a siguiente columna
 				INC EDI
@@ -100,7 +101,8 @@ RET
 ImprimirMatriz ENDP
 
 LlenarMatriz PROC NEAR ;Llena la matriz con valores
-	LEA ESI, matriz
+	INVOKE StdOut, ADDR sInstruccionFila
+	LEA EDI, matriz
 	InicioLlenado:
 		;Evaluar cada una de las filas
 		InicioLlenarFila:
@@ -109,6 +111,10 @@ LlenarMatriz PROC NEAR ;Llena la matriz con valores
 			MOV BX, filas
 			CMP i, BX
 			JE FinLlenarFila
+			;Recibir valores del usuario
+			INVOKE StdOut, ADDR sInputFila
+			INVOKE StdIn, ADDR sInput, 100
+			LEA ESI, sInput
 			;Evaluar cada una de las columnas
 			InicioLlenarColumnas:
 				;Comprobar si se ha llegado al final de la fila
@@ -117,10 +123,10 @@ LlenarMatriz PROC NEAR ;Llena la matriz con valores
 				CMP j, BX
 				JE FinLlenarColumnas
 				;Agregar siguiente valor
-				CALL SiguienteValor
-				MOV AL, actualValue
-				MOV [ESI], AL
+				MOV AL, [ESI]
+				MOV [EDI], AL
 				;Moverse a siguiente columna
+				INC EDI
 				INC ESI
 				INC j
 				JMP InicioLlenarColumnas
@@ -134,11 +140,6 @@ LlenarMatriz PROC NEAR ;Llena la matriz con valores
 	FinLlenado:
 RET 
 LlenarMatriz ENDP
-
-SiguienteValor PROC NEAR ;Se genera el siguiente valor de la matriz
-	INC actualValue
-RET 
-SiguienteValor ENDP
 
 Limpiar PROC NEAR ;Limpia todos los registros
         XOR EAX, EAX
