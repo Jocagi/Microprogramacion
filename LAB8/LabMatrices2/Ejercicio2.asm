@@ -24,15 +24,17 @@ INCLUDELIB \masm32\lib\masm32.lib
 	sValorFila DB 10,13,"Ingrese cantidad de filas: ",0
 	sValorColumna DB 10,13,"Ingrese cantidad de columnas: ",0
 	sTamanioMatriz DB 10,13,"La matriz tiene un tamaño de: ",0
-	sValorMatriz DB 10,13,10,13,"Los valores en la matriz son: ",10,13,0
+	sValorMatriz DB 10,13,10,13,"Los valores originales en la matriz son: ",10,13,0
+	sValorMatrizOrdenada DB 10,13,10,13,"Los valores ordenados en la matriz son: ",10,13,0
 	sInstruccionFila DB 10,13,10,13,"Ingrese los valores para cada fila. Cada caracter toma una posicion en la matriz.", 10,13, "Se ignora los valores extras.",10,13,0
 	sInputFila DB 10,13,"Ingrese valores de la fila: ",0
-	sError DB 10,13,"Error. Tamaño de matriz demasiado grande.",10,13,0
+	sError DB 10,13,"Error. Tamaño de matriz demasiado grande o demasiado pequeño.",10,13,0
 	sErrorValor DB 10,13,"Error. Entrada Invalida.",10,13,0
 	sSalto DB 10,13,0
 	sEspacio DB " ",0
 	;Data
 	matriz DB 9802 DUP(0)
+	arrayCount DB 0
 	sInput DB 105 DUP(0)
 	sResultado DB 10 DUP(0)
 	filas DW 0
@@ -48,6 +50,10 @@ PROGRAM:
 	Inicio:
 		CALL LeerDatos
 		CALL LlenarMatriz
+		INVOKE StdOut, ADDR sValorMatriz
+		CALL ImprimirMatriz
+		CALL OrdenarMatriz
+		INVOKE StdOut, ADDR sValorMatrizOrdenada
 		CALL ImprimirMatriz
 		JMP Fin
 		ErrorTamanio:
@@ -57,7 +63,6 @@ PROGRAM:
 	INVOKE ExitProcess, 0
 
 ImprimirMatriz PROC NEAR ;Imprime los valores de la matriz
-	INVOKE StdOut, ADDR sValorMatriz
 	LEA EDI, matriz
 	InicioImprimir:
 		INVOKE StdOut, ADDR sSalto
@@ -141,6 +146,29 @@ LlenarMatriz PROC NEAR ;Llena la matriz con valores
 RET 
 LlenarMatriz ENDP
 
+OrdenarMatriz PROC NEAR
+	CALL Limpiar
+    MOV CL, arrayCount      
+    DEC CX
+siguiente:                 
+    MOV BX, CX
+	LEA ESI, matriz		;Reiniciar valores
+comparar:
+    MOV AL, [ESI]
+    MOV DL, [ESI+1]
+    CMP AL, DL
+    JLE noswap			;Comparar si el valor es menor, si lo es, intercambiar
+swap:
+    MOV [ESI], DL
+    MOV [ESI+1], AL
+noswap: 
+    INC ESI
+    DEC BX
+    JNZ comparar		;Comparacion si no se ha llegado al final
+    LOOP siguiente		;Evaluar siguiente posicion      
+RET
+OrdenarMatriz ENDP
+
 Limpiar PROC NEAR ;Limpia todos los registros
         XOR EAX, EAX
 		XOR EBX, EBX
@@ -166,12 +194,17 @@ LeerDatos PROC NEAR ;Lee cantidad de filas y de columnas
 	MOV columnas, BX
 	;Imprimir tamaño de matriz
 	Multiplicar filas, columnas, intValue
+	CALL Limpiar
+	MOV AX, intValue
+	MOV arrayCount, AL
 	CALL IntToString
 	INVOKE StdOut, ADDR sTamanioMatriz
 	INVOKE StdOut, ADDR sResultado
 	;Validar tamaño
 	CMP intValue, 100d
 	JA ErrorTamanio
+	CMP intValue, 1d
+	JLE ErrorTamanio
 RET 
 LeerDatos ENDP
 
