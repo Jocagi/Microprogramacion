@@ -8,13 +8,20 @@ INCLUDE \masm32\include\masm32.inc
 INCLUDELIB \masm32\lib\kernel32.lib   
 INCLUDELIB \masm32\lib\masm32.lib
 .DATA 
-;Strings
+	;Strings
+	sMensaje DB 10,13,"Ingrese el mensaje: ",0
+	sClave DB 10,13,"Ingrese la clave: ",0
 	sValorMatriz DB 10,13,10,13,"Los valores en la matriz son: ",10,13,0
 	sErrorValor DB 10,13,"Error. Entrada Invalida.",10,13,0
 	sSalto DB 10,13,0
 	sEspacio DB " ",0
 	;Data
-	sInput DB 10 DUP(0)
+	;Datos de Cifrado
+	mensaje DB 100 DUP(0)
+	clave DB 100 DUP(0)
+	messageLength DB 0
+	;Datos de operaciones
+	sInput DB 100 DUP(0)
 	sResultado DB 10 DUP(0)
 	buffer DB 0
 	intValue DW 0
@@ -30,9 +37,23 @@ INCLUDELIB \masm32\lib\masm32.lib
 	j DW 0
 .CODE
 PROGRAM:
-	INVOKE StdOut, ADDR saludo 
+	INVOKE StdOut, ADDR saludo
+	INVOKE StdOut, ADDR sMensaje
+	INVOKE StdIn, ADDR mensaje, 99
+	INVOKE StdOut, ADDR sClave
+	INVOKE StdIn, ADDR clave, 99
+	CALL LongitudMensaje
+	CALL CompletarClaveMensaje
+	INVOKE StdOut, ADDR sSalto
+	INVOKE StdOut, ADDR clave
+	;XOR AX, AX
+	;MOV AL, messageLength
+	;MOV intValue, AX
+	;ALL IntToString
+	;INVOKE StdOut, ADDR sResultado
 	CALL LlenarMatriz
-	CALL ImprimirMatriz
+	;CALL ImprimirMatriz
+	
 	;Finalizar
 	INVOKE ExitProcess, 0
 
@@ -45,6 +66,91 @@ Limpiar PROC NEAR
 		XOR EDX, EDX
 RET 
 Limpiar ENDP
+
+;Si la clave es menor que el mensaje, se repite la clave hasta completar la longitud del mensaje
+CompletarClaveRepetir PROC NEAR
+	CALL Limpiar
+	LEA ESI, clave
+	LEA EDI, clave
+	MOV CL, messageLength
+	InicioCompletarClave:
+		XOR BX, BX
+		XOR AX, AX
+		MOV AL, 00h
+		CMP CL, AL		;Comprobar si se ha llegado al final
+		JE FinMensaje
+		MOV BL, [ESI]
+		MOV AL, 0Ah
+		CMP BL, AL		;Ignorar saltos de linea
+		JE Llenar
+		MOV AL, 00h
+		CMP BL, AL		;Comprobar si la clave se ha quedado sin chars
+		JNE SiguientePos
+		Llenar:
+		;Se comienza a repetir los valores de la clave
+		MOV AL, [EDI]
+		MOV [ESI], AL
+		INC EDI
+		MOV AL, 00h
+		MOV BL, [EDI]	;Validar si es necesario repetir la clave otra vez
+		CMP AL, BL
+		JNE SiguientePos
+		ReiniciarClave:
+			LEA EDI, clave
+		SiguientePos:
+		DEC CL
+		INC ESI
+		JMP InicioCompletarClave
+	FinMensaje:
+RET
+CompletarClaveRepetir ENDP
+
+;Si la clave es menor que el mensaje, se repite la clave hasta completar la longitud del mensaje
+CompletarClaveMensaje PROC NEAR
+	CALL Limpiar
+	LEA ESI, clave
+	LEA EDI, mensaje
+	MOV CL, messageLength
+	InicioCompletarConMensaje:
+		XOR BX, BX
+		XOR AX, AX
+		MOV AL, 00h
+		CMP CL, AL		;Comprobar si se ha llegado al final
+		JE FinCompletarMensaje
+		MOV BL, [ESI]
+		MOV AL, 0Ah
+		CMP BL, AL		;Ignorar saltos de linea
+		JE LlenarConMensaje
+		MOV AL, 00h
+		CMP BL, AL		;Comprobar si la clave se ha quedado sin chars
+		JNE SiguienteChar
+		LlenarConMensaje:
+		;Se comienza a repetir los valores de la clave
+		MOV AL, [EDI]
+		MOV [ESI], AL
+		INC EDI
+		SiguienteChar:
+		DEC CL
+		INC ESI
+		JMP InicioCompletarConMensaje
+	FinCompletarMensaje:
+RET
+CompletarClaveMensaje ENDP
+
+;Calcula la longitud del mensaje y lo guarda en (messageLength)
+LongitudMensaje PROC NEAR
+	LEA ESI, mensaje
+	CALL Limpiar
+	MOV messageLength, AL	;Limpiar variable
+	SiguienteChar:
+	INC messageLength
+	INC ESI
+	MOV BL, 00h
+	MOV AL, [ESI] 
+	CMP AL, BL
+	JNE SiguienteChar
+RET
+LongitudMensaje ENDP
 
 ;Imprime los valores de la matriz
 ImprimirMatriz PROC NEAR 
@@ -157,6 +263,7 @@ SiguienteValor PROC NEAR
 RET 
 SiguienteValor ENDP
 
+;Se limpia el array de resultado
 LimpiarsResultado PROC NEAR
     CALL Limpiar
     MOV EBX, 0
@@ -170,7 +277,8 @@ LimpiarsResultado PROC NEAR
 RET
 LimpiarsResultado ENDP
 
-IntToString PROC NEAR ;Convierte el valor de la variable resultado en String
+;Convierte el valor de la variable resultado en String
+IntToString PROC NEAR
 		CALL LimpiarsResultado
 		CALL Limpiar
 		;Leer input
