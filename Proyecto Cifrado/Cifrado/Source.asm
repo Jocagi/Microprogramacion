@@ -9,19 +9,22 @@ INCLUDELIB \masm32\lib\kernel32.lib
 INCLUDELIB \masm32\lib\masm32.lib
 .DATA 
 	;Strings
+	sTituloCifrado DB 10,13,10,13,"Cifrado:",10,13,0
 	sMensaje DB 10,13,"Ingrese el mensaje: ",0
-	sMensajeCifrado DB 10,13,"El mensaje cifrado es: ",0
+	sMensajeCifrado DB 10,13,10,13,"El mensaje cifrado es: ",0
 	sClave DB 10,13,"Ingrese la clave: ",0
-	sValorClave DB 10,13,"La clave a utilizar es: ",0
+	sValorClave DB 10,13,10,13,"La clave a utilizar es: ",0
 	sValorMatriz DB 10,13,10,13,"Los valores en la matriz son: ",10,13,0
 	sErrorValor DB 10,13,"Error. Entrada Invalida.",10,13,0
+	sTipoCifrado DB 10,13,10,13,"Elija el tipo de cifrado:",10,13,0
+	sCifradoOpcion1 DB 10,13,"1) Original (Repetir clave)",0
+	sCifradoOpcion2 DB 10,13,"2) Variante (Toma mensaje)",0
+	sElegir DB 10,13,10,13,"Opcion: ",0
 	sSalto DB 10,13,0
 	sEspacio DB " ",0
 	;Data
 	;Datos de Cifrado
-	mensaje DB 100 DUP(0)
-	clave DB 100 DUP(0)
-	messageLength DB 0
+	opcion DB 100 DUP(0)
 	;Datos de operaciones
 	sInput DB 100 DUP(0)
 	sResultado DB 100 DUP(0)
@@ -37,9 +40,12 @@ INCLUDELIB \masm32\lib\masm32.lib
 	i DB 0
 	j DB 0
 	;Operaciones de cifrado
+	mensaje DB 100 DUP(0)
+	clave DB 100 DUP(0)
+	messageLength DB 0
 	posicion DB 0
-	charMensaje DB "P"
-	charClave DB "J"
+	charMensaje DB "P",0
+	charClave DB "J",0
 	actualValue DB 255, 0
 .CODE
 PROGRAM PROC NEAR
@@ -252,85 +258,6 @@ ShiftABC PROC NEAR
 RET
 ShiftABC ENDP
 
-;Se limpia el array de resultado
-LimpiarsResultado PROC NEAR
-    CALL Limpiar
-    MOV EBX, 0
-    LEA ESI, sResultado
-    InicioLimpiarString:
-        MOV [ESI], BL
-        INC ESI
-        CMP [ESI], BL
-        JNE InicioLimpiarString
-    FinLimpiarString:
-RET
-LimpiarsResultado ENDP
-
-;Convierte el valor de la variable resultado en String
-IntToString PROC NEAR
-		CALL LimpiarsResultado
-		CALL Limpiar
-		;Leer input
-		lea esi, sResultado	
-		mov BX, intValue
-
-		;Comparar valores
-		;cmp bx, 09d				; Verificar si el numero es de 1 digito o no
-		;jle UnDigitoProd		; Es un digito
-		cmp bx, 99d				; Vefificar si el numero es de 2 digitos
-		jle DosDigitosProd		; Son dos digitos
-		cmp bx, 999d			; Vefificar si el numero es de 3 digitos
-		jle TresDigitosProd		; Son dos digitos
-		jmp CuatroDigitosProd	; Son tres digitos
-		
-		UnDigito:
-		mov [esi], cl			; Mover cantidad de decenas
-        MOV al, 30h
-        ADD [esi], eax          ; Valor ASCII
-		inc esi					; Mover posicion en cadena
-		UnDigitoProd:
-		mov [esi], bl			; Asignar valor del ultimo digito
-        MOV al, 30h
-        ADD [esi], eax          ; Valor ASCII
-		jmp FinIntString
-		
-		DosDigitos:
-		mov [esi], cl			; Mover cantidad de centenas
-        MOV al, 30h
-        ADD [esi], eax          ; Valor ASCII
-		inc esi					; Mover posicion en cadena
-		xor cl, cl				; Limpiar contador
-		DosDigitosProd:
-		cmp BX, 09d
-		jbe UnDigito			; Saltar si le queda solo un digito
-		sub BX, 10d				; Quitarle un decena
-		inc cl					; Contar cuantas decenas quitamos
-		jmp DosDigitosProd		; Reiniciar ciclo
-		
-		TresDigitos:
-		mov [esi], cl			; Mover cantidad de centenas
-        MOV al, 30h
-        ADD [esi], eax          ; Valor ASCII
-		inc esi					; Mover posicion en cadena
-		xor cl, cl				; Limpiar contador
-		TresDigitosProd:
-		cmp BX, 99d
-		jbe DosDigitos			; Saltar si tiene dos digitos
-		sub BX, 100d			; Quitarle un centena
-		inc cl					; Contar cuantas decenas quitamos
-		jmp TresDigitosProd		; Reiniciar ciclo
-
-		CuatroDigitosProd:
-		cmp BX, 999d
-		jbe TresDigitos			; Saltar si tiene dos digitos
-		sub BX, 1000d			; Quitarle un millar
-		inc cl					; Contar cuantos millares quitamos
-		jmp CuatroDigitosProd	; Reiniciar ciclo
-		
-		FinIntString:
-	RET
-IntToString ENDP
-
 ;Buscar valor de fila para el cifrado
 DefinirFila PROC NEAR
 	XOR AX, AX
@@ -369,14 +296,43 @@ BuscarValor ENDP
 
 ;Procedimiento para el cifrado
 Cifrar PROC NEAR
+	;Presentacion
+	INVOKE StdOut, ADDR sTituloCifrado
 	;Solicitar Informacion
 	INVOKE StdOut, ADDR sMensaje
 	INVOKE StdIn, ADDR mensaje, 99
 	INVOKE StdOut, ADDR sClave
 	INVOKE StdIn, ADDR clave, 99
-	;Si la calve es mas pequeña que el mensaje, completarla
-	CALL LongitudMensaje
-	CALL CompletarClaveRepetir
+	;Elegir tipo de cifrado
+	ElegirCifrado:
+	INVOKE StdOut, ADDR sTipoCifrado
+	INVOKE StdOut, ADDR sCifradoOpcion1
+	INVOKE StdOut, ADDR sCifradoOpcion2
+	INVOKE StdOut, ADDR sElegir
+	INVOKE StdIn, ADDR opcion, 99
+	;Comprobar opcion elegida
+	MOV AL, opcion
+	MOV BL, "1"
+	CMP AL, BL
+	JE Cifrado1
+	MOV BL, "2"
+	CMP AL, BL
+	JE Cifrado2
+	JMP ErrorOpcion
+	Cifrado1:
+		;Si la calve es mas pequeña que el mensaje, completarla
+		CALL LongitudMensaje
+		CALL CompletarClaveRepetir
+		JMP ContinuacionCifrado
+	Cifrado2:
+		;Si la calve es mas pequeña que el mensaje, completarla
+		CALL LongitudMensaje
+		CALL CompletarClaveMensaje
+		JMP ContinuacionCifrado
+	ErrorOpcion:
+		INVOKE StdOut, ADDR sErrorValor
+		JMP ElegirCifrado
+	ContinuacionCifrado:
 	;Mostrar clave
 	INVOKE StdOut, ADDR sValorClave
 	INVOKE StdOut, ADDR clave
@@ -384,7 +340,6 @@ Cifrar PROC NEAR
 	CALL LlenarMatriz
 	;Cifrar
 	INVOKE StdOut, ADDR sMensajeCifrado
-	CALL LimpiarsResultado
 	MOV DL, 00h
 	MOV posicion, DL		;Iniciar desde posicion cero
 	InicioCifrado:
@@ -394,6 +349,12 @@ Cifrar PROC NEAR
 		MOV DL, posicion
 		MOV AL, [ESI+EDX]	;Acceder a valor actual en mensaje
 		MOV charMensaje, AL
+		MOV BL, "A"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Menor a A)
+		JB	CharInvalido
+		MOV BL, "Z"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Mayor a Z)
+		JA	CharInvalido
 		CALL DefinirColumna
 		;Fila de matriz
 		CALL Limpiar
@@ -401,10 +362,17 @@ Cifrar PROC NEAR
 		MOV DL, posicion
 		MOV AL, [ESI+EDX]	;Acceder a valor actual en mensaje
 		MOV charClave, AL
+		MOV BL, "A"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Menor a A)
+		JB	CharInvalido
+		MOV BL, "Z"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Mayor a Z)
+		JA	CharInvalido
 		CALL DefinirFila
 		;Valor cifrado
 		CALL BuscarValor
 		INVOKE StdOut, ADDR actualValue
+		SiguientePosMSG:
 		;Siguiente valor
 		MOV DL, posicion
 		INC DL
@@ -412,6 +380,11 @@ Cifrar PROC NEAR
 		MOV AL, messageLength
 		CMP DL, AL
 		JNE InicioCifrado
+		JMP FinCifrado
+		;Si se introduce un ASCII diferente a una letra
+		CharInvalido:
+		INVOKE StdOut, ADDR charMensaje
+		JMP SiguientePosMSG
 	FinCifrado:
 RET
 Cifrar ENDP
