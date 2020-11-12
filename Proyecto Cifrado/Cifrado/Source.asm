@@ -3,6 +3,7 @@
 ;Options
 option casemap:none 
 ;Includes
+INCLUDE External.inc
 INCLUDE \masm32\include\kernel32.inc  
 INCLUDE \masm32\include\masm32.inc
 INCLUDELIB \masm32\lib\kernel32.lib   
@@ -36,8 +37,10 @@ INCLUDELIB \masm32\lib\masm32.lib
 	i DW 0
 	j DW 0
 .CODE
-PROGRAM:
-	INVOKE StdOut, ADDR saludo
+PROGRAM PROC NEAR
+	
+	ImprimirTexto saludo
+	INVOKE SaludoPROC, ADDR saludo
 	INVOKE StdOut, ADDR sMensaje
 	INVOKE StdIn, ADDR mensaje, 99
 	INVOKE StdOut, ADDR sClave
@@ -46,16 +49,13 @@ PROGRAM:
 	CALL CompletarClaveMensaje
 	INVOKE StdOut, ADDR sSalto
 	INVOKE StdOut, ADDR clave
-	;XOR AX, AX
-	;MOV AL, messageLength
-	;MOV intValue, AX
-	;ALL IntToString
-	;INVOKE StdOut, ADDR sResultado
 	CALL LlenarMatriz
-	;CALL ImprimirMatriz
+	CALL ImprimirMatriz
 	
 	;Finalizar
 	INVOKE ExitProcess, 0
+
+PROGRAM ENDP
 
 ;----------------------Procedimientos----------------------
 ;Limpia todos los registros
@@ -237,7 +237,7 @@ LlenarMatriz PROC NEAR
 RET 
 LlenarMatriz ENDP
 
-; Corre todos los caracteres de un string a la izquierda e inserta la primera letra al final
+;Corre todos los caracteres de un string a la izquierda e inserta la primera letra al final
 ShiftABC PROC NEAR
 	CALL Limpiar
 	LEA ESI, valueABC
@@ -256,12 +256,6 @@ ShiftABC PROC NEAR
 	MOV [ESI-1], DL	; Asignar ultimo valor
 RET
 ShiftABC ENDP
-
-;Se genera el siguiente valor de la matriz
-SiguienteValor PROC NEAR 
-	INC actualValue
-RET 
-SiguienteValor ENDP
 
 ;Se limpia el array de resultado
 LimpiarsResultado PROC NEAR
