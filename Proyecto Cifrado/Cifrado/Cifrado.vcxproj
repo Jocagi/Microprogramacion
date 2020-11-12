@@ -140,11 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <MASM Include="Matrices.asm" />
     <MASM Include="Source.asm" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="External.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

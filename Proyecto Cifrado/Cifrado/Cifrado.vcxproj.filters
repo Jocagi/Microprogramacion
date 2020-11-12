@@ -18,13 +18,5 @@
     <MASM Include="Source.asm">
       <Filter>Source Files</Filter>
     </MASM>
-    <MASM Include="Matrices.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="External.inc">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
 </Project>
