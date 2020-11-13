@@ -10,8 +10,10 @@ INCLUDELIB \masm32\lib\masm32.lib
 .DATA 
 	;Strings
 	sTituloCifrado DB 10,13,10,13,"Cifrado:",10,13,0
+	sTituloDescifrado DB 10,13,10,13,"Descifrado:",10,13,0
 	sMensaje DB 10,13,"Ingrese el mensaje: ",0
 	sMensajeCifrado DB 10,13,10,13,"El mensaje cifrado es: ",0
+	sMensajeDescifrado DB 10,13,10,13,"El mensaje cifrado es: ",0
 	sClave DB 10,13,"Ingrese la clave: ",0
 	sValorClave DB 10,13,10,13,"La clave a utilizar es: ",0
 	sValorMatriz DB 10,13,10,13,"Los valores en la matriz son: ",10,13,0
@@ -40,9 +42,10 @@ INCLUDELIB \masm32\lib\masm32.lib
 	i DB 0
 	j DB 0
 	;Operaciones de cifrado
-	mensaje DB 100 DUP(0)
-	clave DB 100 DUP(0)
+	mensaje DB 500 DUP(0)
+	clave DB 1000 DUP(0)
 	messageLength DB 0
+	passwordLength DB 0
 	posicion DB 0
 	charMensaje DB "P",0
 	charClave DB "J",0
@@ -51,7 +54,11 @@ INCLUDELIB \masm32\lib\masm32.lib
 PROGRAM PROC NEAR
 	
 	INVOKE StdOut, ADDR saludo
+	;Crear matriz de cifrado
+	CALL LlenarMatriz
+	;Operaciones
 	CALL Cifrar
+	CALL Descifrar
 
 	;Finalizar
 	INVOKE ExitProcess, 0
@@ -143,15 +150,30 @@ LongitudMensaje PROC NEAR
 	LEA ESI, mensaje
 	CALL Limpiar
 	MOV messageLength, AL	;Limpiar variable
-	SiguienteChar:
+	SiguienteCharMSG:
 	INC messageLength
 	INC ESI
 	MOV BL, 00h
 	MOV AL, [ESI] 
 	CMP AL, BL
-	JNE SiguienteChar
+	JNE SiguienteCharMSG
 RET
 LongitudMensaje ENDP
+
+;Calcula la longitud del mensaje y lo guarda en (messageLength)
+LongitudClave PROC NEAR
+	LEA ESI, clave
+	CALL Limpiar
+	MOV passwordLength, AL	;Limpiar variable
+	SiguienteCharClave:
+	INC passwordLength
+	INC ESI
+	MOV BL, 00h
+	MOV AL, [ESI] 
+	CMP AL, BL
+	JNE SiguienteCharClave
+RET
+LongitudClave ENDP
 
 ;Imprime los valores de la matriz
 ImprimirMatriz PROC NEAR 
@@ -259,24 +281,60 @@ RET
 ShiftABC ENDP
 
 ;Buscar valor de fila para el cifrado
-DefinirFila PROC NEAR
+DefinirFilaCifrado PROC NEAR
 	XOR AX, AX
 	MOV AL, charClave
 	SUB AL, 40h
 	DEC AL
 	MOV i, AL
 RET
-DefinirFila ENDP
+DefinirFilaCifrado ENDP
 
 ;Buscar valor de columna para el cifrado
-DefinirColumna PROC NEAR
+DefinirColumnaCifrado PROC NEAR
 	XOR AX, AX
 	MOV AL, charMensaje
 	SUB AL, 40h
 	DEC AL
 	MOV j, AL
 RET
-DefinirColumna ENDP
+DefinirColumnaCifrado ENDP
+
+;Buscar valor de fila para el cifrado
+DefinirFilaDescifrado PROC NEAR
+	MOV AL, 00h
+	MOV i, AL
+RET
+DefinirFilaDescifrado ENDP
+
+;Buscar valor de columna para el cifrado
+DefinirColumnaDescifrado PROC NEAR
+	CALL Limpiar
+	;Operacion
+	;(("Z" - charClave) + (charCifrado - "A") + 1) % 26
+	
+	;("Z" - charClave) -> X
+	MOV AL, "Z"
+	MOV AH, charClave
+	SUB AL, AH
+
+	;(charCifrado - "A") -> Y
+	MOV BL, charMensaje
+	MOV BH, "A"
+	SUB BL, BH
+
+	;X + Y + 1 -> Z
+	XOR AH, AH
+	ADD AL, BL
+	INC AL
+
+	;Z % 26
+	MOV BL, 26d
+	DIV BL
+
+	MOV j, AH
+RET
+DefinirColumnaDescifrado ENDP
 
 ;Buscar un valor [i,j] en la matriz
 BuscarValor PROC NEAR
@@ -294,15 +352,51 @@ BuscarValor PROC NEAR
 RET
 BuscarValor ENDP
 
+;Reinicia la variable mensaje
+LimpiarMensaje PROC NEAR
+    CALL Limpiar
+    MOV EBX, 0
+    LEA ESI, mensaje
+    InicioLimpiarMensaje:
+        MOV [ESI], BL
+        INC ESI
+        CMP [ESI], BL
+        JNE InicioLimpiarMensaje
+    FinLimpiarMensaje:
+RET
+LimpiarMensaje ENDP
+
+;Reinicia la variable clave
+LimpiarClave PROC NEAR
+    CALL Limpiar
+    MOV EBX, 0
+    LEA ESI, clave
+    InicioLimpiarClave:
+        MOV [ESI], BL
+        INC ESI
+        CMP [ESI], BL
+        JNE InicioLimpiarClave
+    FinLimpiarClave:
+RET
+LimpiarClave ENDP
+
+;Limpia todas la variables para cifrado
+LimpiarCifrado PROC NEAR
+	CALL LimpiarClave
+	CALL LimpiarMensaje
+RET
+LimpiarCifrado ENDP
+
 ;Procedimiento para el cifrado
 Cifrar PROC NEAR
+	CALL LimpiarCifrado
 	;Presentacion
 	INVOKE StdOut, ADDR sTituloCifrado
 	;Solicitar Informacion
 	INVOKE StdOut, ADDR sMensaje
-	INVOKE StdIn, ADDR mensaje, 99
+	INVOKE StdIn, ADDR mensaje, 450
 	INVOKE StdOut, ADDR sClave
-	INVOKE StdIn, ADDR clave, 99
+	INVOKE StdIn, ADDR clave, 450
 	;Elegir tipo de cifrado
 	ElegirCifrado:
 	INVOKE StdOut, ADDR sTipoCifrado
@@ -336,8 +430,6 @@ Cifrar PROC NEAR
 	;Mostrar clave
 	INVOKE StdOut, ADDR sValorClave
 	INVOKE StdOut, ADDR clave
-	;Crear matriz de cifrado
-	CALL LlenarMatriz
 	;Cifrar
 	INVOKE StdOut, ADDR sMensajeCifrado
 	MOV DL, 00h
@@ -355,7 +447,7 @@ Cifrar PROC NEAR
 		MOV BL, "Z"
 		CMP AL, BL			;Comparar si el simbolo se sale del rango (Mayor a Z)
 		JA	CharInvalido
-		CALL DefinirColumna
+		CALL DefinirColumnaCifrado
 		;Fila de matriz
 		CALL Limpiar
 		LEA ESI, clave
@@ -368,7 +460,7 @@ Cifrar PROC NEAR
 		MOV BL, "Z"
 		CMP AL, BL			;Comparar si el simbolo se sale del rango (Mayor a Z)
 		JA	CharInvalido
-		CALL DefinirFila
+		CALL DefinirFilaCifrado
 		;Valor cifrado
 		CALL BuscarValor
 		INVOKE StdOut, ADDR actualValue
@@ -388,5 +480,105 @@ Cifrar PROC NEAR
 	FinCifrado:
 RET
 Cifrar ENDP
+
+;Procedimiento para el cifrado
+Descifrar PROC NEAR
+	CALL LimpiarCifrado
+	;Presentacion
+	INVOKE StdOut, ADDR sTituloDescifrado
+	;Solicitar Informacion
+	INVOKE StdOut, ADDR sMensaje
+	INVOKE StdIn, ADDR mensaje, 450
+	INVOKE StdOut, ADDR sClave
+	INVOKE StdIn, ADDR clave, 450
+	;Elegir tipo de cifrado
+	ElegirDescifrado:
+	INVOKE StdOut, ADDR sTipoCifrado
+	INVOKE StdOut, ADDR sCifradoOpcion1
+	INVOKE StdOut, ADDR sCifradoOpcion2
+	INVOKE StdOut, ADDR sElegir
+	INVOKE StdIn, ADDR opcion, 99
+	;Comprobar opcion elegida
+	MOV AL, opcion
+	MOV BL, "1"
+	CMP AL, BL
+	JE Descifrado1
+	MOV BL, "2"
+	CMP AL, BL
+	JE Descifrado2
+	JMP ErrorOpcion1
+	Descifrado1:
+		;Si la clave es mas pequeña que el mensaje, completarla
+		CALL LongitudMensaje
+		CALL CompletarClaveRepetir
+		CALL LongitudClave
+		JMP ContinuacionDescifrado
+	Descifrado2:
+		;Si la calve es mas pequeña que el mensaje, completarla
+		;(Esto se va a hacer mientras el mensaje se comienza a descifrar)
+		CALL LongitudClave
+		JMP ContinuacionDescifrado
+	ErrorOpcion1:
+		INVOKE StdOut, ADDR sErrorValor
+		JMP ElegirDescifrado
+	ContinuacionDescifrado:
+	;Cifrar
+	INVOKE StdOut, ADDR sMensajeDescifrado
+	MOV DL, 00h
+	MOV posicion, DL		;Iniciar desde posicion cero
+	InicioDescifrado:
+		;Columna de matriz
+		CALL Limpiar
+		LEA ESI, mensaje
+		MOV DL, posicion
+		MOV AL, [ESI+EDX]	;Acceder a valor actual en mensaje
+		MOV charMensaje, AL
+		MOV BL, "A"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Menor a A)
+		JB	CharInvalidoDescifrado
+		MOV BL, "Z"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Mayor a Z)
+		JA	CharInvalidoDescifrado
+		;Fila de matriz
+		CALL Limpiar
+		LEA ESI, clave
+		MOV DL, posicion
+		MOV AL, [ESI+EDX]	;Acceder a valor actual en mensaje
+		MOV charClave, AL
+		MOV BL, "A"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Menor a A)
+		JB	CharInvalidoDescifrado
+		MOV BL, "Z"
+		CMP AL, BL			;Comparar si el simbolo se sale del rango (Mayor a Z)
+		JA	CharInvalidoDescifrado
+		;Definir fila y columna
+		CALL DefinirFilaDescifrado
+		CALL DefinirColumnaDescifrado
+		;Valor cifrado
+		CALL BuscarValor
+		INVOKE StdOut, ADDR actualValue
+		;Agregar valor descifrado al final de la clave
+		CALL Limpiar
+		MOV AL, passwordLength
+		MOV BL, posicion
+		ADD AL, BL
+		MOV CL, actualValue
+		MOV [ESI+EAX], CL
+		SiguientePosMSGDescifrado:
+		;Siguiente valor
+		MOV DL, posicion
+		INC DL
+		MOV posicion, DL
+		MOV AL, messageLength
+		CMP DL, AL
+		JNE InicioDescifrado
+		JMP FinDescifrado
+		;Si se introduce un ASCII diferente a una letra
+		CharInvalidoDescifrado:
+		INVOKE StdOut, ADDR charMensaje
+		JMP SiguientePosMSGDescifrado
+	FinDescifrado:
+RET
+Descifrar ENDP
 
 END PROGRAM
