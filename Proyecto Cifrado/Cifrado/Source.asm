@@ -9,6 +9,11 @@ INCLUDELIB \masm32\lib\kernel32.lib
 INCLUDELIB \masm32\lib\masm32.lib
 .DATA 
 	;Strings
+	sTitulo DB 10,13,10,13,"Menu Principal:",0
+	sPrincipalOpcion1 DB 10,13,"1) Cifrado",0
+	sPrincipalOpcion2 DB 10,13,"2) Descifrado",0
+	sPrincipalOpcion3 DB 10,13,"3) Estadistica",0
+	sPrincipalOpcion4 DB 10,13,"4) Salir",0
 	sTituloCifrado DB 10,13,10,13,"Cifrado:",10,13,0
 	sTituloDescifrado DB 10,13,10,13,"Descifrado:",10,13,0
 	sMensaje DB 10,13,"Ingrese el mensaje: ",0
@@ -47,20 +52,21 @@ INCLUDELIB \masm32\lib\masm32.lib
 	messageLength DB 0
 	passwordLength DB 0
 	posicion DB 0
-	charMensaje DB "P",0
-	charClave DB "J",0
+	charMensaje DB 0,0
+	charClave DB 0,0
 	actualValue DB 255, 0
 .CODE
 PROGRAM PROC NEAR
-	
-	INVOKE StdOut, ADDR saludo
 	;Crear matriz de cifrado
 	CALL LlenarMatriz
-	;Operaciones
-	CALL Cifrar
-	CALL Descifrar
+
+	MenuPrincipal:
+		;Operaciones
+		CALL Cifrar
+		CALL Descifrar
 
 	;Finalizar
+	FinalizarPrograma:
 	INVOKE ExitProcess, 0
 
 PROGRAM ENDP
