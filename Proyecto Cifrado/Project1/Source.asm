@@ -9,7 +9,7 @@ INCLUDELIB \masm32\lib\kernel32.lib
 INCLUDELIB \masm32\lib\masm32.lib
 
 .data
-    five_instruction db "Ingrese el criptograma: ",0
+        five_instruction db "Ingrese el criptograma: ",0
 	crypto_five	db 500 dup('$')
 	count	db 0,0
 	numbers	db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -20,6 +20,7 @@ INCLUDELIB \masm32\lib\masm32.lib
 	point_char db 2Eh,0
 	units	db 0,0
 	tens db 0,0
+	hundreds db 0,0
 	quotient db 0,0
 	remainder db 0,0
 	new_letter_print db 0,0
@@ -37,7 +38,7 @@ INCLUDELIB \masm32\lib\masm32.lib
 	instruction5 db "5. Calculo de probabilidades",0
 	instruction6 db "6. Salir del programa",0
 	instruction7 db "Que desea hacer?: ",0
-	_option db 0,0
+	option_input db 0,0
 	invalid_main_option db "La opcion seleccionada es invalida",0
 
 .const
@@ -50,19 +51,27 @@ program:
 
 		; Print menu
 		invoke StdOut, addr main_tittle
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction1
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction2
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction3
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction4
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction5
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction6
+		invoke StdOut, addr new_line
 		invoke StdOut, addr instruction7
-		invoke StdIn, addr _option, 10
+		invoke StdOut, addr new_line
+		invoke StdIn, addr option_input, 10
 		invoke StdOut, addr new_line
 
 		; Clean registers
 		xor bx, bx
-		mov bl, _option
+		mov bl, option_input
 
 		; Check what to do
 		cmp bl, 31h
@@ -271,6 +280,9 @@ program:
 
 		lea esi,letters
 		lea edi,numbers
+		xor ax, ax
+		xor bx, bx
+		xor cx, cx
 
 		; Loop the array
 		values_loop:
@@ -381,14 +393,28 @@ program:
 		invoke StdOut, addr point_char
 
 		; Init data for remainder
+		mov hundreds, 00h
 		mov tens,00h
 		mov units,00h
 		xor bx, bx
 		mov bl, remainder
 
+		; Check if remainder has hundreds
+		cmp bl,63h
+		jle check_for_tens
+
+		; Get the hundreds
+		get_hundreds_remainder:
+			cmp bl,64h
+			jl check_for_tens
+			sub bl,64h
+			inc hundreds
+			jmp get_hundreds_remainder
+
 		; Check if remainder has tens
-		cmp bl,09h
-		jle print_remainder
+		check_for_tens:
+			cmp bl,09h
+			jle print_remainder
 
 		; Get the tens
 		get_tens_remainder:
@@ -400,11 +426,20 @@ program:
 
 		; Print the remainder
 		print_remainder:
-			add tens, 30h
-			invoke StdOut, addr tens
+
+			; Check if units is okey
 			mov units,bl
-			add units, 30h
-			invoke StdOut, addr units
+			cmp units, 09h
+			jle print_result_remainder
+			mov units, 00h
+
+			print_result_remainder:
+				add hundreds, 30h
+				invoke StdOut, addr hundreds
+				add tens, 30h
+				invoke StdOut, addr tens
+				add units, 30h
+				invoke StdOut, addr units
 
 		ret
 
@@ -971,7 +1006,7 @@ program:
 		mov bl,00h
 
 		reset_loop:
-			cmp cl,1Ah
+			cmp cl,19h
 			jg finish_reset
 			mov [edi],bl
 			inc cl
