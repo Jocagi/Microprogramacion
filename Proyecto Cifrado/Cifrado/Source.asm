@@ -686,7 +686,7 @@ RET
 Descifrar ENDP
 
 ; Get the probabilities
-init_probability proc near
+	init_probability proc near
 
 		; Print instructions
 		invoke StdOut, addr five_instruction
@@ -744,11 +744,10 @@ init_probability proc near
 
 	init_probability endp
 
-; Print the posibble message
-posibble_decrypt proc near
+	; Print the posibble message
+	posibble_decrypt proc near
 
 		; Init reader
-		invoke StdOut, addr new_line
 		invoke StdOut, addr possible_text
 		lea esi, crypto_five
 
@@ -775,8 +774,10 @@ posibble_decrypt proc near
 			mov al,cl
 			mov cl,64h
 			mul cl
+			xor cx, cx
 			mov cl,count
 			div cl
+			xor cx, cx
 			mov cl,al
 			mov quotient,al
 			mov remainder,ah
@@ -792,8 +793,8 @@ posibble_decrypt proc near
 
 	posibble_decrypt endp
 
-; Get the values of the probability
-get_values proc near
+	; Get the values of the probability
+	get_values proc near
 
 		lea esi,letters
 		lea edi,numbers
@@ -837,8 +838,10 @@ get_values proc near
 			mov al,bl
 			mov bl,64h
 			mul bl
+			xor bx, bx
 			mov bl,count
 			div bl
+			xor bx, bx
 			mov bl,al
 			mov quotient,al
 			mov remainder,ah
@@ -879,8 +882,8 @@ get_values proc near
 
 	get_values endp
 
-; Print the probability
-print_probability proc near
+	; Print the probability
+	print_probability proc near
 
 		; Init data
 		mov tens,00h
@@ -962,8 +965,8 @@ print_probability proc near
 
 	print_probability endp
 
-; Print the posibble new letter 
-print_posibble_new_letter proc near
+	; Print the posibble new letter 
+	print_posibble_new_letter proc near
 
 		; Init data
 		mov al, quotient
@@ -1226,8 +1229,8 @@ print_posibble_new_letter proc near
 
 	print_posibble_new_letter endp
 
-; Print the new letter
-new_letter proc near
+	; Print the new letter
+	new_letter proc near
 
 		; Init data
 		mov al, quotient
@@ -1515,8 +1518,8 @@ new_letter proc near
 
 	new_letter endp
 
-; Reset the numbers array to 0
-reset_numbers proc near
+	; Reset the numbers array to 0
+	reset_numbers proc near
 
 		lea edi,numbers
 		mov cl,00h
